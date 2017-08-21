@@ -18,7 +18,9 @@ package org.apache.nifi.websocket;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.processor.Processor;
@@ -62,6 +64,8 @@ public class WebSocketMessageRouter {
         sessions.keySet().forEach(sessionId -> {
             try {
                 disconnect(sessionId, "Processing has stopped.");
+            } catch (SessionNotFoundException e) {
+                logger.debug("Session was not found. " + e.getMessage());
             } catch (IOException e) {
                 logger.warn("Failed to disconnect session {} due to {}", sessionId, e, e);
             }
@@ -81,44 +85,39 @@ public class WebSocketMessageRouter {
         sessions.remove(sessionId);
     }
 
-    public void onWebSocketText(final String sessionId, final String message) {
+    public void onWebSocketText(final String sessionId, final String message) throws SessionNotFoundException {
         if (processor != null && processor instanceof TextMessageConsumer) {
             ((TextMessageConsumer)processor).consume(getSessionOrFail(sessionId), message);
         }
     }
 
-    public void onWebSocketBinary(final String sessionId, final byte[] payload, final int offset, final int length) {
+    public void onWebSocketBinary(final String sessionId, final byte[] payload, final int offset, final int length) throws SessionNotFoundException {
         if (processor != null && processor instanceof BinaryMessageConsumer) {
             ((BinaryMessageConsumer)processor).consume(getSessionOrFail(sessionId), payload, offset, length);
         }
     }
 
-    private WebSocketSession getSessionOrFail(final String sessionId) {
+    private WebSocketSession getSessionOrFail(final String sessionId) throws SessionNotFoundException {
+        if (StringUtils.isEmpty(sessionId)) {
+            throw new IllegalStateException("SessionId is not set");
+        }
         final WebSocketSession session = sessions.get(sessionId);
         if (session == null) {
-            throw new IllegalStateException("Session was not found for the sessionId: " + sessionId);
+            throw new SessionNotFoundException("Session was not found for the sessionId: " + sessionId);
         }
         return session;
     }
 
-    public void sendMessage(final String sessionId, final SendMessage sendMessage) throws IOException {
-        if (!StringUtils.isEmpty(sessionId)) {
-            final WebSocketSession session = getSessionOrFail(sessionId);
-            sendMessage.send(session);
-        } else {
-            //The sessionID is not specified so broadcast the message to all connected client sessions.
-            sessions.keySet().forEach(itrSessionId -> {
-                try {
-                    final WebSocketSession session = getSessionOrFail(itrSessionId);
-                    sendMessage.send(session);
-                } catch (IOException e) {
-                    logger.warn("Failed to send message to session {} due to {}", itrSessionId, e, e);
-                }
-            });
-        }
+    public void sendMessage(final String sessionId, final SendMessage sendMessage) throws IOException, SessionNotFoundException {
+        final WebSocketSession session = getSessionOrFail(sessionId);
+        sendMessage.send(session);
     }
 
-    public void disconnect(final String sessionId, final String reason) throws IOException {
+    public Set<String> getSessionIds() {
+        return new HashSet<>(sessions.keySet());
+    }
+
+    public void disconnect(final String sessionId, final String reason) throws IOException, SessionNotFoundException {
         final WebSocketSession session = getSessionOrFail(sessionId);
         session.close(reason);
         sessions.remove(sessionId);
