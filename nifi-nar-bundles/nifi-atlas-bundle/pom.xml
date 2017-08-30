@@ -56,30 +56,28 @@
                         <groupId>org.slf4j</groupId>
                         <artifactId>jul-to-slf4j</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-minikdc</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-annotations</artifactId>
-                    </exclusion>
                     <!--
-                        Exclude these Atlas typesystem to reduce dependency size.
-                        Use atlas-intg and atlas-common instead.
+                        <exclusion>
+                            <groupId>log4j</groupId>
+                            <artifactId>log4j</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.apache.hadoop</groupId>
+                            <artifactId>hadoop-minikdc</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.apache.hadoop</groupId>
+                            <artifactId>hadoop-annotations</artifactId>
+                        </exclusion>
+                        <!-
+                            Exclude these Atlas typesystem to reduce dependency size.
+                            Use atlas-intg and atlas-common instead.
+                        ->
+                        <exclusion>
+                            <groupId>org.apache.atlas</groupId>
+                            <artifactId>atlas-typesystem</artifactId>
+                        </exclusion>
                     -->
-                    <exclusion>
-                        <groupId>org.apache.atlas</groupId>
-                        <artifactId>atlas-typesystem</artifactId>
-                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -98,10 +96,6 @@
                     <exclusion>
                         <groupId>log4j</groupId>
                         <artifactId>log4j</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -122,10 +116,6 @@
                         <groupId>log4j</groupId>
                         <artifactId>log4j</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
-                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -137,14 +127,12 @@
                         <groupId>org.slf4j</groupId>
                         <artifactId>slf4j-log4j12</artifactId>
                     </exclusion>
+                    <!--
                     <exclusion>
                         <groupId>log4j</groupId>
                         <artifactId>log4j</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
-                    </exclusion>
+                    -->
                 </exclusions>
             </dependency>
         </dependencies>
