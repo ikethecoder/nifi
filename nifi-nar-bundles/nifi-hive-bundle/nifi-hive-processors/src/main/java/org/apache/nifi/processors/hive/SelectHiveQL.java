@@ -27,12 +27,15 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.antlr.runtime.RecognitionException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.nifi.annotation.behavior.EventDriven;
@@ -72,7 +75,8 @@ import org.apache.nifi.util.hive.HiveJdbcCommon;
 @WritesAttributes({
         @WritesAttribute(attribute = "mime.type", description = "Sets the MIME type for the outgoing flowfile to application/avro-binary for Avro or text/csv for CSV."),
         @WritesAttribute(attribute = "filename", description = "Adds .avro or .csv to the filename attribute depending on which output format is selected."),
-        @WritesAttribute(attribute = "selecthiveql.row.count", description = "Indicates how many rows were selected/returned by the query.")
+        @WritesAttribute(attribute = "selecthiveql.row.count", description = "Indicates how many rows were selected/returned by the query."),
+        @WritesAttribute(attribute = "query.input.tables", description = "Contains input table names in comma delimited 'databaseName.tableName' format."),
 })
 public class SelectHiveQL extends AbstractHiveQLProcessor {
 
@@ -272,6 +276,7 @@ public class SelectHiveQL extends AbstractHiveQLProcessor {
                 flowfile = fileToProcess;
             }
 
+            final Map<String, String> attributes = new HashMap<>();
             flowfile = session.write(flowfile, new OutputStreamCallback() {
                 @Override
                 public void process(final OutputStream out) throws IOException {
@@ -288,6 +293,13 @@ public class SelectHiveQL extends AbstractHiveQLProcessor {
                             if (paramCount > 0) {
                                 setParameters(1, (PreparedStatement) st, paramCount, fileToProcess.getAttributes());
                             }
+                        }
+
+                        try {
+                            attributes.putAll(toQueryTableAttributes(findTableNames(selectQuery)));
+                        } catch (Exception e) {
+                            // If failed to parse the query, just log a warning message, but continue.
+                            getLogger().warn("Failed to parse query: {} due to {}", new Object[]{selectQuery, e}, e);
                         }
 
                         final ResultSet resultSet = (flowbased ? ((PreparedStatement)st).executeQuery(): st.executeQuery(selectQuery));
@@ -308,7 +320,8 @@ public class SelectHiveQL extends AbstractHiveQLProcessor {
             });
 
             // Set attribute for how many rows were selected
-            flowfile = session.putAttribute(flowfile, RESULT_ROW_COUNT, String.valueOf(nrOfRows.get()));
+            attributes.put(RESULT_ROW_COUNT, String.valueOf(nrOfRows.get()));
+            flowfile = session.putAllAttributes(flowfile, attributes);
 
             // Set MIME type on output document and add extension to filename
             if (AVRO.equals(outputFormat)) {
