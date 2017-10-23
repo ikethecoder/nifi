@@ -17,6 +17,8 @@
 org.apache.nifi.atlas.provenance.analyzer.NiFiRemotePort
 org.apache.nifi.atlas.provenance.analyzer.KafkaTopic
 org.apache.nifi.atlas.provenance.analyzer.PutHiveStreaming
+org.apache.nifi.atlas.provenance.analyzer.InputPort
+# org.apache.nifi.atlas.provenance.analyzer.GetPutFile
 
 # By transit URI:
 org.apache.nifi.atlas.provenance.analyzer.Hive2JDBC
@@ -25,3 +27,5 @@ org.apache.nifi.atlas.provenance.analyzer.HBaseTable
 
 # By event type, if none of above analyzers matches"
 org.apache.nifi.atlas.provenance.analyzer.CreateObscureInputDataSet
+# org.apache.nifi.atlas.provenance.analyzer.CloneObscureInputDataSet
+# org.apache.nifi.atlas.provenance.analyzer.ReceiveInputDataSet

@@ -1,5 +1,7 @@
 package org.apache.nifi.atlas.provenance;
 
+import org.apache.atlas.model.instance.AtlasEntity;
+import org.apache.atlas.model.instance.AtlasObjectId;
 import org.apache.nifi.atlas.NiFiFlow;
 import org.apache.nifi.atlas.resolver.ClusterResolver;
 import org.apache.nifi.authorization.user.NiFiUser;
@@ -17,6 +19,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.nifi.atlas.NiFiTypes.ATTR_QUALIFIED_NAME;
+import static org.apache.nifi.atlas.NiFiTypes.TYPE_NIFI_INPUT_PORT;
+
 public class StandardAnalysisContext implements AnalysisContext {
 
     private final Logger logger = LoggerFactory.getLogger(StandardAnalysisContext.class);
@@ -29,6 +34,14 @@ public class StandardAnalysisContext implements AnalysisContext {
         this.nifiFlow = nifiFlow;
         this.clusterResolver = clusterResolver;
         this.provenanceRepository = provenanceRepository;
+    }
+
+    @Override
+    public String lookupInputPortName(String componentId) {
+        final AtlasObjectId portId = new AtlasObjectId(TYPE_NIFI_INPUT_PORT, ATTR_QUALIFIED_NAME, componentId);
+
+        AtlasEntity ent = nifiFlow.getRootInputPortEntities().get(portId);
+        return (String) ent.getAttribute("name");
     }
 
     @Override

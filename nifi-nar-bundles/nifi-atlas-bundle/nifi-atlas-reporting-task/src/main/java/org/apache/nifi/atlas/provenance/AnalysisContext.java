@@ -13,4 +13,5 @@ public interface AnalysisContext {
     List<ConnectionStatus> findConnectionFrom(String componentId);
     ComputeLineageResult queryLineage(long eventId);
     ProvenanceEventRecord getProvenanceEvent(long eventId);
+    String lookupInputPortName (String componentId);
 }
