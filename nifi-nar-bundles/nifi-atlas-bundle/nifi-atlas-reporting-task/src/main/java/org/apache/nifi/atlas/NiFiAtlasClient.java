@@ -34,33 +34,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_CREATED_BY_NIFI_FLOW;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_DESCRIPTION;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_FLOW_PATHS;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_INCOMING_FLOW_PATHS;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_INPUTS;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_INPUT_PORTS;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_NAME;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_NIFI_FLOW;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_OUTGOING_FLOW_PATHS;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_OUTPUTS;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_OUTPUT_PORTS;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_QUALIFIED_NAME;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_QUEUES;
-import static org.apache.nifi.atlas.NiFiTypes.ATTR_URL;
-import static org.apache.nifi.atlas.NiFiTypes.ENTITIES;
-import static org.apache.nifi.atlas.NiFiTypes.TYPE_NIFI_FLOW;
-import static org.apache.nifi.atlas.NiFiTypes.TYPE_NIFI_FLOW_PATH;
+import static org.apache.nifi.atlas.NiFiTypes.*;
 
 public class NiFiAtlasClient {
 
@@ -234,6 +212,24 @@ public class NiFiAtlasClient {
         mutationResponse = atlasClient.createEntities(atlasEntities);
         logger.debug("mutation response={}", mutationResponse);
 
+
+        // Create processor entities
+        for (int i = 0; i < paths.size(); i++) {
+            NiFiFlowPath path = paths.get(i);
+            path.getProcessorIds().forEach(pid -> {
+                final ProcessorStatus processor = nifiFlow.getProcessors().get(pid);
+                final AtlasEntity proc = new AtlasEntity();
+                entities.add(proc);
+                proc.setTypeName(TYPE_NIFI_PROCESSOR);
+                proc.setVersion(1L);
+                proc.setAttribute(ATTR_NAME, processor.getName());
+                proc.setAttribute(ATTR_QUALIFIED_NAME, processor.getId());
+            });
+        }
+        mutationResponse = atlasClient.createEntities(atlasEntities);
+        logger.debug("mutation response={}", mutationResponse);
+
+
         // Create path entities.
         for (int i = 0; i < paths.size(); i++) {
             NiFiFlowPath path = paths.get(i);
@@ -266,6 +262,14 @@ public class NiFiAtlasClient {
 
             // At this point, nifi_flow is already created, so DataSet can have a pointer to nifi_flow.
             activateDataSetIOLinks(path, pathEntity);
+
+            // Add a reference to each processor that is part of the flow path
+            final List<AtlasObjectId> processorList = new ArrayList<>();
+            pathEntity.setAttribute(ATTR_PROCESSORS, processorList);
+            path.getProcessorIds().forEach(pid -> {
+                final ProcessorStatus processor = nifiFlow.getProcessors().get(pid);
+                processorList.add(createProcessorObjectId(processor));
+            });
         }
 
         // Create entities without relationships, Atlas doesn't allow storing ObjectId that doesn't exist.
@@ -322,6 +326,10 @@ public class NiFiAtlasClient {
 
     private AtlasObjectId createObjectId(NiFiFlowPath path) {
         return new AtlasObjectId(TYPE_NIFI_FLOW_PATH, ATTR_QUALIFIED_NAME, path.getId());
+    }
+
+    public AtlasObjectId createProcessorObjectId(ProcessorStatus path) {
+        return new AtlasObjectId(TYPE_NIFI_PROCESSOR, ATTR_QUALIFIED_NAME, path.getId());
     }
 
     private void activateDataSetIOLinks(AtlasProcess process, AtlasEntity entity) throws AtlasServiceException {
