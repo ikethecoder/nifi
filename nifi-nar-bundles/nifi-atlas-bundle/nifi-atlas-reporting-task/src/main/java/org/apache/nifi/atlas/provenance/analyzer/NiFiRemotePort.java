@@ -49,7 +49,7 @@ public class NiFiRemotePort extends AbstractNiFiProvenanceEventAnalyzer {
         final ConnectionStatus connection = connections.get(0);
         final Referenceable ref = new Referenceable(type);
         ref.set(ATTR_NAME, isRemoteInputPort ? connection.getDestinationName() : connection.getSourceName());
-        ref.set(ATTR_QUALIFIED_NAME, remotePortId);
+        ref.set(ATTR_QUALIFIED_NAME, event.getFlowFileUuid()); // event.getComponentId();
 
         // For RemoteInputPort, need to find the previous component connected to this port,
         // which passed this particular FlowFile.
