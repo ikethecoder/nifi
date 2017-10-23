@@ -24,10 +24,72 @@
     <artifactId>nifi-nar-bundles</artifactId>
     <packaging>pom</packaging>
     <modules>
-
+        <module>nifi-framework-bundle</module>
+        <module>nifi-hadoop-bundle</module>
+        <module>nifi-hadoop-libraries-bundle</module>
+        <module>nifi-jetty-bundle</module>
+        <module>nifi-provenance-repository-bundle</module>
+        <module>nifi-standard-bundle</module>
+        <module>nifi-standard-services</module>
+        <module>nifi-update-attribute-bundle</module>
+        <module>nifi-kafka-bundle</module>
+        <module>nifi-kite-bundle</module>
+        <module>nifi-kudu-bundle</module>
+        <module>nifi-solr-bundle</module>
+        <module>nifi-confluent-platform-bundle</module>
+        <module>nifi-aws-bundle</module>
+        <module>nifi-social-media-bundle</module>
+        <module>nifi-enrich-bundle</module>
+        <module>nifi-hl7-bundle</module>
+        <module>nifi-ccda-bundle</module>
+        <module>nifi-language-translation-bundle</module>
+        <module>nifi-mongodb-bundle</module>
+        <module>nifi-flume-bundle</module>
+        <module>nifi-hbase-bundle</module>
+        <module>nifi-ambari-bundle</module>
+        <module>nifi-media-bundle</module>
+        <module>nifi-avro-bundle</module>
+        <module>nifi-couchbase-bundle</module>
+        <module>nifi-azure-bundle</module>
+        <module>nifi-ldap-iaa-providers-bundle</module>
+        <module>nifi-kerberos-iaa-providers-bundle</module>
+        <module>nifi-riemann-bundle</module>
+        <module>nifi-html-bundle</module>
+        <module>nifi-scripting-bundle</module>
+        <module>nifi-elasticsearch-bundle</module>
+        <module>nifi-amqp-bundle</module>
+	<module>nifi-splunk-bundle</module>
+        <module>nifi-jms-bundle</module>
+        <module>nifi-lumberjack-bundle</module>
+        <module>nifi-beats-bundle</module>
+        <module>nifi-cassandra-bundle</module>
+        <module>nifi-spring-bundle</module>
         <module>nifi-hive-bundle</module>
-
+	<module>nifi-site-to-site-reporting-bundle</module>
+        <module>nifi-mqtt-bundle</module>
+        <module>nifi-evtx-bundle</module>
+        <module>nifi-slack-bundle</module>
+        <module>nifi-snmp-bundle</module>
+        <module>nifi-datadog-bundle</module>
+        <module>nifi-windows-event-log-bundle</module>
+        <module>nifi-ignite-bundle</module>
+        <module>nifi-rethinkdb-bundle</module>
+        <module>nifi-email-bundle</module>
+    	<module>nifi-ranger-bundle</module>
+        <module>nifi-websocket-bundle</module>
+        <module>nifi-tcp-bundle</module>
+        <module>nifi-gcp-bundle</module>
+        <module>nifi-registry-bundle</module>
+        <module>nifi-stateful-analysis-bundle</module>
+        <module>nifi-poi-bundle</module>
+        <module>nifi-cdc</module>
+        <module>nifi-cybersecurity-bundle</module>
+        <module>nifi-parquet-bundle</module>
+        <module>nifi-extension-utils</module>
+        <module>nifi-grpc-bundle</module>
+        <module>nifi-redis-bundle</module>
         <module>nifi-atlas-bundle</module>
+
   </modules>
 
     <build>
