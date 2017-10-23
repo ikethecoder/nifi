@@ -304,7 +304,7 @@ public class AtlasNiFiFlowLineage extends AbstractReportingTask {
         consumer = new ProvenanceEventConsumer();
         consumer.setStartPositionValue(context.getProperty(PROVENANCE_START_POSITION).getValue());
         consumer.setBatchSize(context.getProperty(PROVENANCE_BATCH_SIZE).asInteger());
-        consumer.addTargetEventType(CREATE, FETCH, RECEIVE, SEND, CLONE, CONTENT_MODIFIED);
+        consumer.addTargetEventType(CREATE, FETCH, RECEIVE, SEND, CLONE);
         consumer.setLogger(getLogger());
         consumer.setScheduled(true);
 

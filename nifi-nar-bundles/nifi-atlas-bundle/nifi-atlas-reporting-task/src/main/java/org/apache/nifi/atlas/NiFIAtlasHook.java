@@ -206,6 +206,10 @@ public class NiFIAtlasHook extends AtlasHook {
         }
     }
 
+    public void addDataSetRefs(DataSetRefs dataSetRefs, Referenceable flowPathRef) {
+        addDataSetRefs(dataSetRefs, flowPathRef, false);
+    }
+
     public void addDataSetRefs(DataSetRefs dataSetRefs, Referenceable flowPathRef, boolean create) {
         addDataSetRefs(dataSetRefs.getInputs(), flowPathRef, ATTR_INPUTS);
         addDataSetRefs(dataSetRefs.getOutputs(), flowPathRef, ATTR_OUTPUTS);
