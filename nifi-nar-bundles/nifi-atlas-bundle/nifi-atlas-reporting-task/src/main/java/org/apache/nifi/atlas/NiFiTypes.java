@@ -34,6 +34,7 @@ public class NiFiTypes {
     public static final String TYPE_NIFI_COMPONENT = "nifi_component";
     public static final String TYPE_NIFI_FLOW = "nifi_flow";
     public static final String TYPE_NIFI_FLOW_PATH = "nifi_flow_path";
+    public static final String TYPE_NIFI_PROCESSOR = "nifi_processor";
     public static final String TYPE_NIFI_DATA = "nifi_data";
     public static final String TYPE_NIFI_QUEUE = "nifi_queue";
     public static final String TYPE_NIFI_INPUT_PORT = "nifi_input_port";
@@ -50,6 +51,7 @@ public class NiFiTypes {
     public static final String ATTR_QUALIFIED_NAME = "qualifiedName";
     public static final String ATTR_NIFI_FLOW = "nifiFlow";
     public static final String ATTR_FLOW_PATHS = "flowPaths";
+    public static final String ATTR_PROCESSORS = "processors";
     public static final String ATTR_QUEUES = "queues";
     public static final String ATTR_INPUT_PORTS = "inputPorts";
     public static final String ATTR_OUTPUT_PORTS = "outputPorts";
@@ -79,6 +81,9 @@ public class NiFiTypes {
         final AtlasConstraintDef ownedRef = new AtlasConstraintDef("ownedRef");
         flowPaths.addConstraint(ownedRef);
 
+        final AtlasAttributeDef processors = new AtlasAttributeDef(ATTR_PROCESSORS, arrayOf(TYPE_NIFI_PROCESSOR));
+        processors.setIsOptional(true);
+
         final AtlasAttributeDef queues = new AtlasAttributeDef(ATTR_QUEUES, arrayOf(TYPE_NIFI_QUEUE));
         queues.setIsOptional(true);
         queues.addConstraint(ownedRef);
@@ -100,6 +105,7 @@ public class NiFiTypes {
 
         attributes.add(url);
         attributes.add(flowPaths);
+        attributes.add(processors);
         attributes.add(queues);
         attributes.add(inputPorts);
         attributes.add(outputPorts);
@@ -128,9 +134,19 @@ public class NiFiTypes {
         final AtlasAttributeDef outgoingPaths = new AtlasAttributeDef(ATTR_OUTGOING_FLOW_PATHS, arrayOf(TYPE_NIFI_FLOW_PATH));
         outgoingPaths.setIsOptional(true);
 
+        final AtlasAttributeDef processors = new AtlasAttributeDef(ATTR_PROCESSORS, arrayOf(TYPE_NIFI_PROCESSOR));
+        processors.setIsOptional(true);
+
         attributes.add(url);
+        attributes.add(processors);
         attributes.add(incomingPaths);
         attributes.add(outgoingPaths);
+    };
+
+    private static EntityDefinition NIFI_PROCESSOR = (entity, superTypes, attributes) -> {
+        entity.setVersion(1L);
+        superTypes.add(TYPE_PROCESS);
+        superTypes.add(TYPE_NIFI_COMPONENT);
     };
 
     private static EntityDefinition NIFI_DATA = (entity, superTypes, attributes) -> {
@@ -165,6 +181,7 @@ public class NiFiTypes {
         ENTITIES.put(TYPE_NIFI_INPUT_PORT, NIFI_INPUT_PORT);
         ENTITIES.put(TYPE_NIFI_OUTPUT_PORT, NIFI_OUTPUT_PORT);
         ENTITIES.put(TYPE_NIFI_FLOW_PATH, NIFI_FLOW_PATH);
+        ENTITIES.put(TYPE_NIFI_PROCESSOR, NIFI_PROCESSOR);
         ENTITIES.put(TYPE_NIFI_FLOW, NIFI_FLOW);
     }
 

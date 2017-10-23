@@ -22,7 +22,7 @@ import static org.apache.nifi.atlas.NiFiTypes.TYPE_NIFI_FLOW_PATH;
 
 /**
  * This class is not thread-safe as it holds uncommitted notification messages within instance.
- * {@link #addDataSetRefs(DataSetRefs, Referenceable)} and {@link #commitMessages()} should be used serially from a single thread.
+ * {@link #addDataSetRefs(DataSetRefs, Referenceable, boolean)} and {@link #commitMessages()} should be used serially from a single thread.
  */
 public class NiFIAtlasHook extends AtlasHook {
 
@@ -206,13 +206,33 @@ public class NiFIAtlasHook extends AtlasHook {
         }
     }
 
-    public void addDataSetRefs(DataSetRefs dataSetRefs, Referenceable flowPathRef) {
+    public void addDataSetRefs(DataSetRefs dataSetRefs, Referenceable flowPathRef, boolean create) {
         addDataSetRefs(dataSetRefs.getInputs(), flowPathRef, ATTR_INPUTS);
         addDataSetRefs(dataSetRefs.getOutputs(), flowPathRef, ATTR_OUTPUTS);
         // Here, EntityPartialUpdateRequest adds Process's inputs or outputs elements who does not exists in
         // the current nifi_flow_path entity stored in Atlas.
-        messages.add(new HookNotification.EntityPartialUpdateRequest(NIFI_USER, TYPE_NIFI_FLOW_PATH,
-                ATTR_QUALIFIED_NAME, (String) flowPathRef.get(ATTR_QUALIFIED_NAME), flowPathRef));
+
+        if (create) {
+            messages.add(new HookNotification.EntityCreateRequest(NIFI_USER, flowPathRef));
+        } else {
+            messages.add(new HookNotification.EntityPartialUpdateRequest(NIFI_USER, TYPE_NIFI_FLOW_PATH,
+                    ATTR_QUALIFIED_NAME, (String) flowPathRef.get(ATTR_QUALIFIED_NAME), flowPathRef));
+        }
+    }
+
+    public void addCreateReferenceable (Collection<Referenceable> ins, Referenceable ref) {
+        if (ins != null && !ins.isEmpty()) {
+            for (Referenceable dataSetRef : ins) {
+                final HookNotification.EntityCreateRequest createDataSet = new HookNotification.EntityCreateRequest(NIFI_USER, dataSetRef);
+                messages.add(createDataSet);
+            }
+        }
+        messages.add(new HookNotification.EntityCreateRequest(NIFI_USER, ref));
+    }
+
+    public void addUpdateReferenceable (Referenceable ref) {
+        messages.add(new HookNotification.EntityPartialUpdateRequest(NIFI_USER, ref.getTypeName(),
+                ATTR_QUALIFIED_NAME, (String) ref.get(ATTR_QUALIFIED_NAME), ref));
     }
 
     public void commitMessages() {
