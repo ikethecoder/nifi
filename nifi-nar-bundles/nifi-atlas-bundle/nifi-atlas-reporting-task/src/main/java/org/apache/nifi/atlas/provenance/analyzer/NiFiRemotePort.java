@@ -1,6 +1,7 @@
 package org.apache.nifi.atlas.provenance.analyzer;
 
 import org.apache.atlas.typesystem.Referenceable;
+import org.apache.commons.lang.StringUtils;
 import org.apache.nifi.atlas.provenance.AbstractNiFiProvenanceEventAnalyzer;
 import org.apache.nifi.atlas.provenance.AnalysisContext;
 import org.apache.nifi.atlas.provenance.DataSetRefs;
@@ -45,17 +46,19 @@ public class NiFiRemotePort extends AbstractNiFiProvenanceEventAnalyzer {
             return null;
         }
 
-        // The name of remote port can be retrieved from any connection, use the first one.
-        final ConnectionStatus connection = connections.get(0);
-        final Referenceable ref = new Referenceable(type);
-        ref.set(ATTR_NAME, isRemoteInputPort ? connection.getDestinationName() : connection.getSourceName());
-        ref.set(ATTR_QUALIFIED_NAME, event.getFlowFileUuid()); // event.getComponentId();
 
         // For RemoteInputPort, need to find the previous component connected to this port,
         // which passed this particular FlowFile.
         // That is only possible by calling lineage API.
         final DataSetRefs refs;
         if (isRemoteInputPort) {
+            // There will eventually be an output port SEND that will set the NAME appropriately
+            // The name of remote port can be retrieved from any connection, use the first one.
+            final ConnectionStatus connection = connections.get(0);
+            final Referenceable ref = new Referenceable(type);
+            ref.set(ATTR_NAME, isRemoteInputPort ? connection.getDestinationName() : connection.getSourceName());
+            ref.set(ATTR_QUALIFIED_NAME, event.getFlowFileUuid()); // event.getComponentId();
+
             final ProvenanceEventRecord previousEvent = findPreviousProvenanceEvent(context, event);
             if (previousEvent == null) {
                 logger.warn("Previous event was not found: {}", new Object[]{event});
@@ -65,6 +68,14 @@ public class NiFiRemotePort extends AbstractNiFiProvenanceEventAnalyzer {
             refs = new DataSetRefs(previousEvent.getComponentId());
             refs.addOutput(ref);
         } else {
+            String sourceFlowFileUuid = event.getSourceSystemFlowFileIdentifier().substring("urn:nifi:".length());
+
+            String componentName = context.lookupOutputPortName(event.getComponentId());
+
+            final Referenceable ref = new Referenceable(TYPE_NIFI_OUTPUT_PORT);
+            ref.set(ATTR_NAME, event.getAttribute("filename") + ":" + componentName);
+            ref.set(ATTR_QUALIFIED_NAME, sourceFlowFileUuid);
+
             // Ror RemoteOutputPort, it's possible that multiple processors are connected.
             // In that case, the received FlowFile is cloned and passed to each connection.
             // So we need to create multiple DataSetRefs.

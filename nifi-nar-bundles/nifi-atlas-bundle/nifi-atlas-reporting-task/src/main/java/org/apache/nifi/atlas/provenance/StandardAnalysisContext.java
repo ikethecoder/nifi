@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.nifi.atlas.NiFiTypes.ATTR_QUALIFIED_NAME;
 import static org.apache.nifi.atlas.NiFiTypes.TYPE_NIFI_INPUT_PORT;
+import static org.apache.nifi.atlas.NiFiTypes.TYPE_NIFI_OUTPUT_PORT;
 
 public class StandardAnalysisContext implements AnalysisContext {
 
@@ -43,6 +44,15 @@ public class StandardAnalysisContext implements AnalysisContext {
         AtlasEntity ent = nifiFlow.getRootInputPortEntities().get(portId);
         return (String) ent.getAttribute("name");
     }
+
+    @Override
+    public String lookupOutputPortName(String componentId) {
+        final AtlasObjectId portId = new AtlasObjectId(TYPE_NIFI_OUTPUT_PORT, ATTR_QUALIFIED_NAME, componentId);
+
+        AtlasEntity ent = nifiFlow.getRootOutputPortEntities().get(portId);
+        return (String) ent.getAttribute("name");
+    }
+
 
     @Override
     public List<ConnectionStatus> findConnectionTo(String componentId) {

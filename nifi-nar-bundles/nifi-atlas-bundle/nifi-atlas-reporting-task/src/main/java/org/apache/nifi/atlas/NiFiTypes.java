@@ -47,6 +47,7 @@ public class NiFiTypes {
     public static final String ATTR_OUTPUTS = "outputs";
     public static final String ATTR_URL = "url";
     public static final String ATTR_URI = "uri";
+    public static final String ATTR_NIFI_FLOW_PARAMS = "nifiParams";
     public static final String ATTR_PATH = "path";
     public static final String ATTR_QUALIFIED_NAME = "qualifiedName";
     public static final String ATTR_NIFI_FLOW = "nifiFlow";
@@ -128,6 +129,9 @@ public class NiFiTypes {
 
         final AtlasAttributeDef url = new AtlasAttributeDef(ATTR_URL, "string");
 
+        final AtlasAttributeDef nifiFlowParams = new AtlasAttributeDef(ATTR_NIFI_FLOW_PARAMS, "string");
+        nifiFlowParams.setIsOptional(true);
+
         final AtlasAttributeDef incomingPaths = new AtlasAttributeDef(ATTR_INCOMING_FLOW_PATHS, arrayOf(TYPE_NIFI_FLOW_PATH));
         incomingPaths.setIsOptional(true);
 
@@ -138,6 +142,7 @@ public class NiFiTypes {
         processors.setIsOptional(true);
 
         attributes.add(url);
+        attributes.add(nifiFlowParams);
         attributes.add(processors);
         attributes.add(incomingPaths);
         attributes.add(outgoingPaths);

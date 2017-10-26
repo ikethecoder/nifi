@@ -18,6 +18,7 @@ org.apache.nifi.atlas.provenance.analyzer.NiFiRemotePort
 org.apache.nifi.atlas.provenance.analyzer.KafkaTopic
 org.apache.nifi.atlas.provenance.analyzer.PutHiveStreaming
 org.apache.nifi.atlas.provenance.analyzer.InputPort
+org.apache.nifi.atlas.provenance.analyzer.OutputPort
 org.apache.nifi.atlas.provenance.analyzer.GetPutFile
 
 # By transit URI:

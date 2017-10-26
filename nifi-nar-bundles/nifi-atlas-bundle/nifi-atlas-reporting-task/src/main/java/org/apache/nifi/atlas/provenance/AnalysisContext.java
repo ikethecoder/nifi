@@ -14,4 +14,5 @@ public interface AnalysisContext {
     ComputeLineageResult queryLineage(long eventId);
     ProvenanceEventRecord getProvenanceEvent(long eventId);
     String lookupInputPortName (String componentId);
+    String lookupOutputPortName (String componentId);
 }

@@ -48,13 +48,16 @@ public class ByFileLineageStrategy implements LineageEventProcessor {
                     String cid = event.getComponentId();
                     ProcessorStatus pr = nifiFlow.getProcessors().get(cid);
                     // Create a new
-                    final Referenceable flowPathRef = prepareFlowPathWithTraits (event);
+                    final Referenceable flowPathRef = new Referenceable(TYPE_NIFI_FLOW_PATH);
 
                     flowPathRef.set(ATTR_NAME, (pr == null ? "UNKNOWN" : pr.getName()));
                     flowPathRef.set(ATTR_DESCRIPTION, event.getAttribute("filename") + " : " + flowPathName);
                     flowPathRef.set(ATTR_QUALIFIED_NAME, qname);
                     //flowPathRef.set(ATTR_NIFI_FLOW, flowRef);
                     flowPathRef.set(ATTR_URL, nifiFlow.getUrl());
+                    if (event.getAttribute("nifi.params") != null) {
+                        flowPathRef.set(ATTR_NIFI_FLOW_PARAMS, event.getAttribute("nifi.params"));
+                    }
                     addProcessorToFlowPath (flowPathRef, pr);
 
                     Collection<Referenceable> outputs = getNifiDataRefs(event);
@@ -71,12 +74,15 @@ public class ByFileLineageStrategy implements LineageEventProcessor {
 
                     // Create a new flow path for the Child UUID
                     for ( String childUuid : event.getChildUuids()) {
-                        final Referenceable flowPathRef = prepareFlowPathWithTraits (event);
+                        final Referenceable flowPathRef = new Referenceable(TYPE_NIFI_FLOW_PATH);
                         flowPathRef.set(ATTR_NAME, (pr == null ? "UNKNOWN" : pr.getName()));
                         flowPathRef.set(ATTR_DESCRIPTION, event.getAttribute("filename") + " : " + flowPathName + " (CLONED)");
                         flowPathRef.set(ATTR_QUALIFIED_NAME, childUuid);
                         //f.set(ATTR_NIFI_FLOW, flowRef);
                         flowPathRef.set(ATTR_URL, nifiFlow.getUrl());
+                        if (event.getAttribute("nifi.params") != null) {
+                            flowPathRef.set(ATTR_NIFI_FLOW_PARAMS, event.getAttribute("nifi.params"));
+                        }
                         addProcessorToFlowPath(flowPathRef, pr);
 
                         flowPathRef.set(ATTR_INPUTS, inputs);
@@ -132,12 +138,15 @@ public class ByFileLineageStrategy implements LineageEventProcessor {
                     String cid = refs.getComponentIds().iterator().next();
                     ProcessorStatus pr = nifiFlow.getProcessors().get(cid);
 
-                    final Referenceable flowPathRef = prepareFlowPathWithTraits(event);
+                    final Referenceable flowPathRef = new Referenceable(TYPE_NIFI_FLOW_PATH);
                     flowPathRef.set(ATTR_NAME, (pr == null ? "UNKNOWN" : pr.getName()));
                     flowPathRef.set(ATTR_DESCRIPTION, event.getAttribute("filename") + " : " + flowPath.getName());
                     flowPathRef.set(ATTR_QUALIFIED_NAME, qname);
                     //flowPathRef.set(ATTR_NIFI_FLOW, flowRef);
                     flowPathRef.set(ATTR_URL, nifiFlow.getUrl());
+                    if (event.getAttribute("nifi.params") != null) {
+                        flowPathRef.set(ATTR_NIFI_FLOW_PARAMS, event.getAttribute("nifi.params"));
+                    }
                     addProcessorToFlowPath(flowPathRef, pr);
 
                     Collection<Referenceable> addedFlowPath = new ArrayList<>();
@@ -155,17 +164,6 @@ public class ByFileLineageStrategy implements LineageEventProcessor {
 
     }
 
-    private Referenceable prepareFlowPathWithTraits (ProvenanceEventRecord event) {
-        String[] traits = null;
-
-        // Add the Atlas classifications when they have been updated
-        if (event.getAttributes().get("atlas.classifications") != null) {
-            String classifications = event.getAttributes().get("atlas.classifications");
-            traits = StringUtils.split(classifications, "\n");
-        }
-
-        return (traits == null ? new Referenceable(TYPE_NIFI_FLOW_PATH) : new Referenceable(TYPE_NIFI_FLOW_PATH, traits));
-    }
 
     private void addProcessorToFlowPath (Referenceable flowPathRef, ProcessorStatus pr) {
         Collection<Referenceable> pids = new ArrayList<>();
