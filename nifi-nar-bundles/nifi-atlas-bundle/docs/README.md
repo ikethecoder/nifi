@@ -94,3 +94,14 @@ Agenda:
     - Single Cluster Multi-update
     - Site to site
     - S2S Multi-Update Receiver
+
+## Week #4
+
+Agenda:
+-------
+- Review comments from Koji
+- Show the nifi-atlas project for the nifi clusters setup
+- Show the nifi project with changes
+- Demonstrate nifi.params (Scenario 3)
+- Demonstrate Output Port (Scenario 7)
+- Demonstrate Funnel (Scenario 8)
