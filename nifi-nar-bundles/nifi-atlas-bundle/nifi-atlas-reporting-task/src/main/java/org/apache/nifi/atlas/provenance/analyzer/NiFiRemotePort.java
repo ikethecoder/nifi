@@ -73,7 +73,7 @@ public class NiFiRemotePort extends AbstractNiFiProvenanceEventAnalyzer {
             String componentName = context.lookupOutputPortName(event.getComponentId());
 
             final Referenceable ref = new Referenceable(TYPE_NIFI_OUTPUT_PORT);
-            ref.set(ATTR_NAME, event.getAttribute("filename") + ":" + componentName);
+            ref.set(ATTR_NAME, componentName);
             ref.set(ATTR_QUALIFIED_NAME, sourceFlowFileUuid);
 
             // Ror RemoteOutputPort, it's possible that multiple processors are connected.

@@ -21,8 +21,8 @@ import static org.apache.nifi.atlas.NiFiTypes.ATTR_PROCESSORS;
 
 public class ByFileLineageStrategy implements LineageEventProcessor {
 
-    ComponentLog logger;
-    NiFIAtlasHook nifiAtlasHook;
+    final ComponentLog logger;
+    final NiFIAtlasHook nifiAtlasHook;
 
     public ByFileLineageStrategy (ComponentLog logger, NiFIAtlasHook atlasHook) {
         this.logger = logger;
@@ -36,59 +36,18 @@ public class ByFileLineageStrategy implements LineageEventProcessor {
     public void processEvent (ProvenanceEventRecord event, NiFiFlow nifiFlow, AnalysisContext analysisContext) {
         try {
 
+            // If CLONE, publish an Atlas event for a nifi_flow_path with QN for flowFileUUID and all child UUIDs
             if (event.getEventType() == ProvenanceEventType.CLONE) {
 
-                // final NiFiFlowPath flowPath = nifiFlow.findPath(event.getComponentId());
+                createParentProcess (event, nifiFlow);
 
-                String flowPathName = "undefined"; //flowPath.getName()
+                ProcessorStatus pr = nifiFlow.getProcessors().get(event.getComponentId());
 
-                if (true) {
+                Collection<Referenceable> inputs = getNifiDataRefs(event);
 
-                    String qname = event.getFlowFileUuid();
-                    String cid = event.getComponentId();
-                    ProcessorStatus pr = nifiFlow.getProcessors().get(cid);
-                    // Create a new
-                    final Referenceable flowPathRef = new Referenceable(TYPE_NIFI_FLOW_PATH);
-
-                    flowPathRef.set(ATTR_NAME, (pr == null ? "UNKNOWN" : pr.getName()));
-                    flowPathRef.set(ATTR_DESCRIPTION, event.getAttribute("filename") + " : " + flowPathName);
-                    flowPathRef.set(ATTR_QUALIFIED_NAME, qname);
-                    //flowPathRef.set(ATTR_NIFI_FLOW, flowRef);
-                    flowPathRef.set(ATTR_URL, nifiFlow.getUrl());
-                    if (event.getAttribute("nifi.params") != null) {
-                        flowPathRef.set(ATTR_NIFI_FLOW_PARAMS, event.getAttribute("nifi.params"));
-                    }
-                    addProcessorToFlowPath (flowPathRef, pr);
-
-                    Collection<Referenceable> outputs = getNifiDataRefs(event);
-
-                    flowPathRef.set(ATTR_OUTPUTS, outputs);
-
-                    nifiAtlasHook.addCreateReferenceable(outputs, flowPathRef);
-                }
-
-                if (true) {
-                    ProcessorStatus pr = nifiFlow.getProcessors().get(event.getComponentId());
-
-                    Collection<Referenceable> inputs = getNifiDataRefs(event);
-
-                    // Create a new flow path for the Child UUID
-                    for ( String childUuid : event.getChildUuids()) {
-                        final Referenceable flowPathRef = new Referenceable(TYPE_NIFI_FLOW_PATH);
-                        flowPathRef.set(ATTR_NAME, (pr == null ? "UNKNOWN" : pr.getName()));
-                        flowPathRef.set(ATTR_DESCRIPTION, event.getAttribute("filename") + " : " + flowPathName + " (CLONED)");
-                        flowPathRef.set(ATTR_QUALIFIED_NAME, childUuid);
-                        //f.set(ATTR_NIFI_FLOW, flowRef);
-                        flowPathRef.set(ATTR_URL, nifiFlow.getUrl());
-                        if (event.getAttribute("nifi.params") != null) {
-                            flowPathRef.set(ATTR_NIFI_FLOW_PARAMS, event.getAttribute("nifi.params"));
-                        }
-                        addProcessorToFlowPath(flowPathRef, pr);
-
-                        flowPathRef.set(ATTR_INPUTS, inputs);
-                        nifiAtlasHook.addCreateReferenceable(inputs, flowPathRef);
-                    }
-
+                // Create a new flow path for the Child UUID
+                for ( String childUuid : event.getChildUuids()) {
+                    createProcessForEachChild(event, nifiFlow, pr, childUuid, inputs);
                 }
 
             } else {
@@ -125,25 +84,16 @@ public class ByFileLineageStrategy implements LineageEventProcessor {
                     final Referenceable flowRef = new Referenceable(TYPE_NIFI_FLOW);
                     flowRef.set(ATTR_QUALIFIED_NAME, nifiFlow.getId().getUniqueAttributes().get(ATTR_QUALIFIED_NAME));
 
-                    String name = flowPath.getName();
-                    String qname = flowPath.getId();
-
-                    if (true) {
-                        //qname = event.getAttribute("NIFI_PROCESS_ID");
-                        qname = event.getFlowFileUuid();
-                        name = "For DataFlowId " + qname;
-                    }
-
-
                     String cid = refs.getComponentIds().iterator().next();
+
                     ProcessorStatus pr = nifiFlow.getProcessors().get(cid);
 
                     final Referenceable flowPathRef = new Referenceable(TYPE_NIFI_FLOW_PATH);
                     flowPathRef.set(ATTR_NAME, (pr == null ? "UNKNOWN" : pr.getName()));
                     flowPathRef.set(ATTR_DESCRIPTION, event.getAttribute("filename") + " : " + flowPath.getName());
-                    flowPathRef.set(ATTR_QUALIFIED_NAME, qname);
-                    //flowPathRef.set(ATTR_NIFI_FLOW, flowRef);
+                    flowPathRef.set(ATTR_QUALIFIED_NAME, event.getFlowFileUuid());
                     flowPathRef.set(ATTR_URL, nifiFlow.getUrl());
+
                     if (event.getAttribute("nifi.params") != null) {
                         flowPathRef.set(ATTR_NIFI_FLOW_PARAMS, event.getAttribute("nifi.params"));
                     }
@@ -164,6 +114,45 @@ public class ByFileLineageStrategy implements LineageEventProcessor {
 
     }
 
+
+    private void createParentProcess (ProvenanceEventRecord event, NiFiFlow nifiFlow) {
+        ProcessorStatus pr = nifiFlow.getProcessors().get(event.getComponentId());
+
+        // Create a new
+        final Referenceable flowPathRef = new Referenceable(TYPE_NIFI_FLOW_PATH);
+
+        flowPathRef.set(ATTR_NAME, (pr == null ? "UNKNOWN" : pr.getName()));
+        flowPathRef.set(ATTR_DESCRIPTION, event.getAttribute("filename"));
+        flowPathRef.set(ATTR_QUALIFIED_NAME, event.getFlowFileUuid());
+        flowPathRef.set(ATTR_URL, nifiFlow.getUrl());
+
+        if (event.getAttribute("nifi.params") != null) {
+            flowPathRef.set(ATTR_NIFI_FLOW_PARAMS, event.getAttribute("nifi.params"));
+        }
+        addProcessorToFlowPath (flowPathRef, pr);
+
+        Collection<Referenceable> outputs = getNifiDataRefs(event);
+
+        flowPathRef.set(ATTR_OUTPUTS, outputs);
+
+        nifiAtlasHook.addCreateReferenceable(outputs, flowPathRef);
+    }
+
+    private void createProcessForEachChild(ProvenanceEventRecord event, NiFiFlow nifiFlow, ProcessorStatus pr, String childUuid, Collection<Referenceable> inputs) {
+        final Referenceable flowPathRef = new Referenceable(TYPE_NIFI_FLOW_PATH);
+        flowPathRef.set(ATTR_NAME, (pr == null ? "UNKNOWN" : pr.getName()));
+        flowPathRef.set(ATTR_DESCRIPTION, event.getAttribute("filename") + " (CLONED)");
+        flowPathRef.set(ATTR_QUALIFIED_NAME, childUuid);
+        //f.set(ATTR_NIFI_FLOW, flowRef);
+        flowPathRef.set(ATTR_URL, nifiFlow.getUrl());
+        if (event.getAttribute("nifi.params") != null) {
+            flowPathRef.set(ATTR_NIFI_FLOW_PARAMS, event.getAttribute("nifi.params"));
+        }
+        addProcessorToFlowPath(flowPathRef, pr);
+
+        flowPathRef.set(ATTR_INPUTS, inputs);
+        nifiAtlasHook.addCreateReferenceable(inputs, flowPathRef);
+    }
 
     private void addProcessorToFlowPath (Referenceable flowPathRef, ProcessorStatus pr) {
         Collection<Referenceable> pids = new ArrayList<>();

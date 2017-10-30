@@ -57,6 +57,7 @@ public class TestNiFiRemotePort {
         final ProvenanceEventRecord sendEvent = Mockito.mock(ProvenanceEventRecord.class);
         when(sendEvent.getEventId()).thenReturn(123L);
         when(sendEvent.getComponentId()).thenReturn("port-guid");
+        when(sendEvent.getFlowFileUuid()).thenReturn("file-guid");
         when(sendEvent.getComponentType()).thenReturn(componentType);
         when(sendEvent.getTransitUri()).thenReturn(transitUri);
         when(sendEvent.getEventType()).thenReturn(ProvenanceEventType.SEND);
@@ -106,7 +107,7 @@ public class TestNiFiRemotePort {
         Referenceable ref = refs.getOutputs().iterator().next();
         assertEquals(TYPE_NIFI_INPUT_PORT, ref.getTypeName());
         assertEquals("inputPortA", ref.get(ATTR_NAME));
-        assertEquals("port-guid", ref.get(ATTR_QUALIFIED_NAME));
+        assertEquals("file-guid", ref.get(ATTR_QUALIFIED_NAME));
     }
 
     private LineageNode createLineageNode(LineageNodeType type, String id) {
@@ -128,10 +129,13 @@ public class TestNiFiRemotePort {
         // TODO: add test multiple connections.
         final String componentType = "Remote Output Port";
         final String transitUri = "http://0.example.com:8080/nifi-api/data-transfer/output-ports/port-guid/transactions/tx-guid/flow-files";
+        final String sourceSystemFlowFileIdentifier = "urn:nifi:7ce27bc3-b128-4128-aba2-3a366435fd05";
         final ProvenanceEventRecord record = Mockito.mock(ProvenanceEventRecord.class);
         when(record.getComponentId()).thenReturn("port-guid");
         when(record.getComponentType()).thenReturn(componentType);
         when(record.getTransitUri()).thenReturn(transitUri);
+        when(record.getFlowFileUuid()).thenReturn("file-guid");
+        when(record.getSourceSystemFlowFileIdentifier()).thenReturn(sourceSystemFlowFileIdentifier);
         when(record.getEventType()).thenReturn(ProvenanceEventType.RECEIVE);
 
         final ClusterResolvers clusterResolvers = Mockito.mock(ClusterResolvers.class);
@@ -146,6 +150,7 @@ public class TestNiFiRemotePort {
         final AnalysisContext context = Mockito.mock(AnalysisContext.class);
         when(context.getClusterResolver()).thenReturn(clusterResolvers);
         when(context.findConnectionFrom(matches("port-guid"))).thenReturn(connections);
+        when(context.lookupOutputPortName("port-guid")).thenReturn("outputPortA");
 
         final NiFiProvenanceEventAnalyzer analyzer = NiFiProvenanceEventAnalyzerFactory.getAnalyzer(componentType, transitUri, record.getEventType());
         assertNotNull(analyzer);
@@ -156,7 +161,7 @@ public class TestNiFiRemotePort {
         Referenceable ref = refs.getInputs().iterator().next();
         assertEquals(TYPE_NIFI_OUTPUT_PORT, ref.getTypeName());
         assertEquals("outputPortA", ref.get(ATTR_NAME));
-        assertEquals("port-guid", ref.get(ATTR_QUALIFIED_NAME));
+        assertEquals("7ce27bc3-b128-4128-aba2-3a366435fd05", ref.get(ATTR_QUALIFIED_NAME));
     }
 
 
